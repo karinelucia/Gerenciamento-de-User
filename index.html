@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu primeiro Exemplo com Vue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Catamaran&family=Montserrat:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="root">
+
+        <header>
+            <h1>Gerenciamento de Usuários</h1>
+        </header>
+
+        <main>
+
+            <form v-on:submit.prevent="addUser(formData)">
+
+                <div class="field">
+                    <label for="username-input">Nome</label>
+                    <input type="text" name="username" id="username-input" placeholder="Digite o nome do usuário" v-model="formData.name">
+                </div>
+
+                <div class="field">
+                    <label for="email-input">Email</label>
+                    <input type="email" name="email" id="email-input" placeholder="Digite o email do usuário" v-model="formData.email">
+                </div>
+                
+                <button type="submit">Cadastrar</button>
+
+            </form>
+
+            <div>
+
+                <h3>Lista de Usuários</h3>
+                    <li>Karine </li>
+                    <li> Douglas</li>
+                    <li> Stefanie </li>
+
+                <ol>
+                    <li v-for="user in users" :key="user.id">
+                        <input type="text" v-model="user.name" v-on:change="setUser(user)">
+                        <input type="text" v-model="user.email" v-on:change="setUser(user)">
+                        <button class="user-delete" @click="removeUser(user.id)">Excluir</button>
+                    </li>
+                </ol>
+
+            </div>
+
+        </main>
+
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.min.js"></script>
+
+    <script>
+
+        const server = "http://localhost:8000/api";
+
+        new Vue({
+            el: '#root',
+            data: {
+                users: [],
+                formData: {}
+            },
+            async created() {
+
+                let results = await axios.get(`${server}/users`);
+
+                this.users = results.data;
+
+            },
+            methods: {
+                async addUser(data) {
+
+                    if (!data.name) {
+                        alert('Informe o nome');
+                    } else if (!data.email) {
+                        alert('Informe o email');
+                    } else {
+                        
+                        let results = await axios.post(`${server}/users`, data);
+
+                        this.users.push({
+                            id: results.data.id,
+                            name: results.data.name,
+                            email: results.data.email
+                        });
+                        
+                    }
+
+                },
+                async setUser(data) {
+
+                    if (!data.name) {
+                        alert('Informe o nome');
+                    } else if (!data.email) {
+                        alert('Informe o email');
+                    } else {
+                        
+                        await axios.patch(`${server}/users/${data.id}`, data);
+                        
+                    }
+                    
+                },
+                async removeUser(id) {
+
+                    await axios.delete(`${server}/users/${id}`);
+
+                    this.users = this.users.filter(user => {
+                        return (user.id != id);
+                    })
+                }
+            }
+        })
+
+    </script>
+
+</body>
+</html>
